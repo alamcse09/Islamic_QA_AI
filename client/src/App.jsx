@@ -14,7 +14,7 @@ function App() {
     setAnswer('');
 
     try{
-      const response = await fetch(`http://localhost:8000/ask?query=${question}`);
+      const response = await fetch(`http://localhost:8001/ask?query=${question}`);
       if(!response.ok){
         throw new Error(`Server error: ${response.status}`);
       }
@@ -52,7 +52,12 @@ function App() {
 
       {answer && !isLoading && (
         <Paper elevation={3} sx={{p:3, bgcolor: '#f5f5f5'}}>
-          <Typography variant="body1"><strong>Agent:</strong> {answer} </Typography>
+          <Typography 
+            variant="body1"
+            align='left' 
+            sx={{ whiteSpace: 'pre-line' }}>
+            <strong>Agent:</strong> {answer} 
+          </Typography>
         </Paper>
       )}
       {isLoading && (
