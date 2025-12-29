@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import './App.css'
-import { Container, TextField, Button, Box, Typography, Paper } from '@mui/material';
+import { Container, TextField, Button, Box, Typography, Paper, CircularProgress } from '@mui/material';
 
 function App() {
   const [question, setQuestion] = useState('');
@@ -45,6 +45,8 @@ function App() {
         <Button
           variant="contained"
           onClick={askAgent}
+          disabled = {isLoading}
+          startIcon={isLoading? <CircularProgress size={20} color='inherit'/>:null}
         >
           Ask
         </Button>
