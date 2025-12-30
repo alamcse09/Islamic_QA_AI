@@ -22,7 +22,6 @@ for row in ds['train']:
 
 print(f"--- Loaded {len(documents)} documents ---")
 
-documents = documents[:100]
 print(f"question: {documents[0]}")
 
 embeddings = OllamaEmbeddings(model="nomic-embed-text")
