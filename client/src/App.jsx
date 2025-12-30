@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import './App.css'
-import { Container, TextField, Button, Box, Typography, Paper, CircularProgress } from '@mui/material';
+import { Container, TextField, Button, Box, Typography, Paper, CircularProgress, Divider, Stack } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 
 function App() {
   const [question, setQuestion] = useState('');
@@ -9,12 +10,21 @@ function App() {
   const [error, setError] = useState('');
 
   const askAgent = async () => {
+    if (!question.trim()) return;
+
     setIsLoading(true);
     setError('');
     setAnswer('');
 
     try{
-      const response = await fetch(`http://localhost:8000/ask?query=${question}`);
+      const response = await fetch(`http://localhost:8000/ask`, {
+        method: 'POST',
+        headers: {
+          'Content-Type' : 'application/json',
+        },
+        body: JSON.stringify({question: question}),
+      });
+
       if(!response.ok){
         throw new Error(`Server error: ${response.status}`);
       }
@@ -44,45 +54,59 @@ function App() {
   }
 
   return (
-    <Container maxWidth="sm" sx={{mt:5}}>
-      <Typography variant="h4">
-        Islamic QA
-      </Typography>
+    <Container maxWidth="md" sx={{py:5, display: 'flex', justifyContent: 'center'}}>
+      <Paper elevation={4} sx={{ p: 4, borderRadius: 3, bgcolor: '#ffffff', width: '100%', display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
+        <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold', color: '#2e7d32' }}>
+          Islamic QA Assistant
+        </Typography>
 
-      <Box sx={{display: 'flex', gap: 2, mb: 3}}>
-        <TextField 
-          label="Ask your question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-        />
+        <Typography variant="body2" align="center" color="text.secondary" sx={{ mb: 4 }}>
+          Answer questions based on the provided knowledge base.
+        </Typography>
 
-        <Button
-          variant="contained"
-          onClick={askAgent}
-          disabled = {isLoading}
-          startIcon={isLoading? <CircularProgress size={20} color='inherit'/>:null}
-        >
-          Ask
-        </Button>
-      </Box>
+        <Divider sx={{ mb: 4 }} />
 
-      {answer && (
-        <Paper elevation={3} sx={{p:3, bgcolor: '#f5f5f5'}}>
-          <Typography 
-            variant="body1"
-            align='left' 
-            sx={{ whiteSpace: 'pre-line' }}>
-            <strong>Agent:</strong> {answer} 
-            {isLoading && " ▎"}
-          </Typography>
-        </Paper>
-      )}
-      {isLoading && (
-        <Typography>Loading...</Typography>
-      )}
-      {error && (
-        <Typography sx={{color: "red"}}>{error}</Typography>
-      )}
+      {/* Answer Area */}
+        <Box sx={{ minHeight: '200px', mb: 4, p: 2, borderRadius: 2, bgcolor: '#f9f9f9', border: '1px solid #e0e0e0' }}>
+          {!answer && !isLoading && (
+            <Typography variant="body1" color="text.disabled" align="center" sx={{ mt: 8 }}>
+              Your answer will appear here...
+            </Typography>
+          )}
+          {answer && (
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-line', lineHeight: 1.7 }}>
+              <strong>Agent:</strong> {answer}
+              {isLoading && <span className="cursor"> ▎</span>}
+            </Typography>
+          )}
+          {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
+        </Box>
+
+        {/* Input Area */}
+        <Stack direction="column" spacing={2}>
+          <TextField
+            fullWidth
+            multiline // THIS MAKES IT A TEXTAREA
+            rows={3}
+            placeholder="Type your question here (e.g., What are the pillars of Islam?)"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            disabled={isLoading}
+            variant="outlined"
+          />
+          <Button
+            size="large"
+            variant="contained"
+            color="success"
+            onClick={askAgent}
+            disabled={isLoading || !question.trim()}
+            endIcon={isLoading ? <CircularProgress size={20} color="inherit" /> : <SendIcon />}
+            sx={{ alignSelf: 'flex-end', px: 4 }}
+          >
+            {isLoading ? 'Thinking...' : 'Ask Agent'}
+          </Button>
+        </Stack>
+      </Paper>
     </Container>
   )
 }

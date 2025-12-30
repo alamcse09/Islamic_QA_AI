@@ -2,7 +2,6 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from langchain_ollama import ChatOllama
 import uvicorn
-from data_loader import ingest_json_files
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 import os
@@ -37,10 +36,6 @@ def load_db():
 
 @app.on_event("startup")
 async def startup_event():
-    if not os.path.exists(DB_PATH) or not os.listdir(DB_PATH):
-        print("--- Database missing or empty. Ingesting... ---")
-        ingest_json_files("datasets")
-    
     # Now load it into memory
     load_db()
     print("--- Server is ready and DB is loaded ---")
@@ -48,17 +43,17 @@ async def startup_event():
 class Query(BaseModel):
     question: str
 
-@app.get("/ask")
-async def ask_question(query: str):
+@app.post("/ask")
+async def ask_question(query: Query):
     print("--- Searching the database... ---")
-    docs = retriever.invoke(query)
+    docs = retriever.invoke(query.question)
     print(f"--- Found {len(docs)} relevant chunks. ---")
     if(len(docs)==0):
         return {"answer":"Couldn't find relevant answer"}
     
     context = "\n\n".join([d.page_content for d in docs])
 
-    prompt = f"Use this knowledge to answer: {context}\n\nUser Question:{query}"
+    prompt = f"Use this knowledge to answer: {context}\n\nUser Question:{query.question}"
     async def generate_response():
         async for chunk in llm.astream(prompt):
             yield chunk.content
