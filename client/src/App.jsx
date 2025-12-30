@@ -19,9 +19,23 @@ function App() {
         throw new Error(`Server error: ${response.status}`);
       }
 
-      const data = await response.json();
-      setAnswer(data.answer);
-      setIsLoading(false);
+      // 1. Get the stream reader and a text decoder
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let accumulatedAnswer = "";
+
+      // 2. Read the stream in a loop
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break; // Stream is finished
+
+        // 3. Decode the chunk and update state immediately
+        const chunk = decoder.decode(value, { stream: true });
+        accumulatedAnswer += chunk;
+        
+        // Use the functional update to ensure we have the latest string
+        setAnswer(accumulatedAnswer);
+      }
     } catch(err){
       setError(err.message);
     } finally{
@@ -52,13 +66,14 @@ function App() {
         </Button>
       </Box>
 
-      {answer && !isLoading && (
+      {answer && (
         <Paper elevation={3} sx={{p:3, bgcolor: '#f5f5f5'}}>
           <Typography 
             variant="body1"
             align='left' 
             sx={{ whiteSpace: 'pre-line' }}>
             <strong>Agent:</strong> {answer} 
+            {isLoading && " ▎"}
           </Typography>
         </Paper>
       )}

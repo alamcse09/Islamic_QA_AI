@@ -6,8 +6,17 @@ from data_loader import ingest_json_files
 from langchain_community.embeddings import OllamaEmbeddings
 from langchain_community.vectorstores import Chroma
 import os
+from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], # In production, change this to your react URL
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 llm = ChatOllama(model="llama3.2")
 current_dir = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(current_dir, "knowledge_HF_db")
@@ -50,9 +59,19 @@ async def ask_question(query: str):
     context = "\n\n".join([d.page_content for d in docs])
 
     prompt = f"Use this knowledge to answer: {context}\n\nUser Question:{query}"
-    response = llm.invoke(prompt)
+    async def generate_response():
+        async for chunk in llm.astream(prompt):
+            yield chunk.content
 
-    return {"answer":response.content}
+    return StreamingResponse(
+        generate_response(), 
+        media_type="text/event-stream",
+        headers={
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+    )
 
 @app.get("/all")
 async def get_all():
