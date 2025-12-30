@@ -1,17 +1,31 @@
 import { Box, Typography} from '@mui/material';
+import {useRef, useEffect} from 'react';
 
 const History = ({history, isLoading, streamingAnswer})=>{
+
+    const scrollToEndRef = useRef(null);
+    const scrollToBottom = ()=>{
+        scrollToEndRef.current?.scrollIntoView({behavior: "smooth"});
+    }
+
+    useEffect(()=>{
+        scrollToBottom();
+    },[history, streamingAnswer]);
+
     return (
         <Box sx={{ 
-            minWidth: '500px', 
-            minHeight: '200px', 
-            mb: 4, p: 2, 
+            width: '93%',
+            height: '45vh',
+            mb: 4, 
+            p: 2, 
             borderRadius: 2, 
             bgcolor: '#f9f9f9', 
             border: '1px solid #e0e0e0',
             display: 'flex',
             flexDirection: 'column',
-            gap: 2 // Adds space between messages
+            gap: 2,
+            overflow: 'auto',
+            position: 'relative'
         }}>
             {(!history || history.length === 0) && !isLoading && (
                 <Typography variant="body1" color="text.disabled" align="center" sx={{ mt: 8 }}>
@@ -62,11 +76,9 @@ const History = ({history, isLoading, streamingAnswer})=>{
                     </Typography>
                 </Box>
             )}
-            
-            {/* Show cursor only on the last message if loading */}
-            {isLoading && (
-                <Typography sx={{ alignSelf: 'flex-start' }}>▎</Typography>
-            )}
+
+            {/* Dummy div to anchor the scroll */}
+            <div ref={scrollToEndRef} style={{ float: "left", clear: "both" }} />
         </Box>
     );
 }
