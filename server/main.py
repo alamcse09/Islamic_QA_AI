@@ -9,7 +9,8 @@ import os
 
 app = FastAPI()
 llm = ChatOllama(model="llama3.2")
-DB_PATH = "./knowledge_db"
+current_dir = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(current_dir, "knowledge_HF_db")
 
 embeddings = OllamaEmbeddings(model="nomic-embed-text")
 vectorstore = None
@@ -20,7 +21,7 @@ def load_db():
     vectorstore = Chroma(
         persist_directory=DB_PATH,
         embedding_function=embeddings,
-        collection_name="json_knowledge"
+        collection_name="hf_knowledge"
     )
 
     retriever = vectorstore.as_retriever()

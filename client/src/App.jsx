@@ -14,7 +14,7 @@ function App() {
     setAnswer('');
 
     try{
-      const response = await fetch(`http://localhost:8001/ask?query=${question}`);
+      const response = await fetch(`http://localhost:8000/ask?query=${question}`);
       if(!response.ok){
         throw new Error(`Server error: ${response.status}`);
       }
